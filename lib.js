@@ -4,15 +4,27 @@ function compareNames(friend1, friend2) {
     return friend1.name.localeCompare(friend2.name);
 }
 
-function inviteBestFriends(friends) {
+function BaseIterator(friends, filter) {
+    if (!(filter instanceof Filter)) {
+        throw new TypeError('filter not instanceof Filter');
+    }
+    this.maxLevel = this.hasOwnProperty('maxLevel') ? this.maxLevel : Infinity;
+    this.invitedFriends = BaseIterator.prototype.inviteFriends(friends, this.maxLevel)
+        .filter(filter.filter);
+    this.currentIndex = 0;
+}
+
+BaseIterator.prototype.inviteBestFriends = function (friends) {
     return friends
         .filter(function (friend) {
             return friend.best;
         })
         .sort(compareNames);
-}
+};
 
-function inviteFriendsOfFriends(friends, invitedFriends, newInvitedFriends) {
+BaseIterator.prototype.inviteFriendsOfFriends = function (
+    friends, invitedFriends, newInvitedFriends
+) {
     return newInvitedFriends
         .reduce(function (friendsOfFriends, friend) {
             return friendsOfFriends
@@ -29,25 +41,15 @@ function inviteFriendsOfFriends(friends, invitedFriends, newInvitedFriends) {
             return !invitedFriends.includes(friend);
         })
         .sort(compareNames);
-}
-
-function BaseIterator(friends, filter) {
-    if (!(filter instanceof Filter)) {
-        throw new TypeError('filter not instanceof Filter');
-    }
-    this.maxLevel = this.hasOwnProperty('maxLevel') ? this.maxLevel : Infinity;
-    this.invitedFriends = BaseIterator.prototype.inviteFriends(friends, this.maxLevel)
-        .filter(filter.filter);
-    this.currentIndex = 0;
-}
+};
 
 BaseIterator.prototype.inviteFriends = function (friends, maxLevel) {
     let invitedFriends = [];
-    let newInvitedFriends = inviteBestFriends(friends);
+    let newInvitedFriends = this.inviteBestFriends(friends);
     let count = 0;
     while (count < maxLevel && newInvitedFriends.length > 0) {
         invitedFriends = invitedFriends.concat(newInvitedFriends);
-        newInvitedFriends = inviteFriendsOfFriends(friends, invitedFriends, newInvitedFriends);
+        newInvitedFriends = this.inviteFriendsOfFriends(friends, invitedFriends, newInvitedFriends);
         count++;
     }
 
